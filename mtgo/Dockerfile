@@ -1,5 +1,7 @@
 FROM panard/wine:11.2-wow64
 
+ARG MTGO_VARIANT=headless
+
 USER root
 
 # Install basic dependencies and headless tools
@@ -31,12 +33,15 @@ USER wine
 ENV WINEPREFIX=/home/wine/.wine
 ENV WINEARCH=win64
 ENV WINEDEBUG=-all
+ENV MTGO_VARIANT=${MTGO_VARIANT}
 ENV DOTNET_ROOT=C:\\dotnet
 WORKDIR /home/wine
 
-# Copy scripts
+# Copy scripts and runtime configuration
 USER root
 COPY scripts/ /usr/local/bin/
+RUN mkdir -p /usr/local/share/mtgo
+COPY config/asound-null.conf /usr/local/share/mtgo/asound-null.conf
 RUN chmod +x /usr/local/bin/*.sh \
     && ln -s /usr/local/bin/mtgo.sh /usr/local/bin/mtgo
 USER wine

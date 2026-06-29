@@ -21,26 +21,64 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push MTGO Base
+      - name: Build and push MTGO Headless
         uses: docker/build-push-action@v5
         with:
           context: ./mtgo
+          build-args: |
+            MTGO_VARIANT=headless
           push: true
           tags: |
             videreproject/mtgo:latest
             videreproject/mtgo:headless
+
+      - name: Build and push MTGO X11
+        uses: docker/build-push-action@v5
+        with:
+          context: ./mtgo
+          build-args: |
+            MTGO_VARIANT=x11
+          push: true
+          tags: |
             videreproject/mtgo:x11
+
+      - name: Build and push MTGO Wayland
+        uses: docker/build-push-action@v5
+        with:
+          context: ./mtgo
+          build-args: |
+            MTGO_VARIANT=wayland
+          push: true
+          tags: |
             videreproject/mtgo:wayland
 
-      - name: Build and push MTGOSDK
+      - name: Build and push MTGOSDK Headless
         uses: docker/build-push-action@v5
         with:
           context: ./mtgosdk
           build-args: |
-             BASE_IMAGE=videreproject/mtgo:headless
+            BASE_IMAGE=videreproject/mtgo:headless
           push: true
           tags: |
             videreproject/mtgosdk:latest
             videreproject/mtgosdk:headless
+
+      - name: Build and push MTGOSDK X11
+        uses: docker/build-push-action@v5
+        with:
+          context: ./mtgosdk
+          build-args: |
+            BASE_IMAGE=videreproject/mtgo:x11
+          push: true
+          tags: |
             videreproject/mtgosdk:x11
+
+      - name: Build and push MTGOSDK Wayland
+        uses: docker/build-push-action@v5
+        with:
+          context: ./mtgosdk
+          build-args: |
+            BASE_IMAGE=videreproject/mtgo:wayland
+          push: true
+          tags: |
             videreproject/mtgosdk:wayland

@@ -81,7 +81,7 @@ Lower latency by forwarding windows directly to your desktop.
 
 The commands above work for quick sessions but **do not persist data** between runs. For regular use, use the Compose files in this repository to automatically manage volumes for your Wine settings, decklists, and login data.
 
-1. [Download this repo as a ZIP](https://github.com/videre-project/mtgo-oci/archive/refs/heads/main.zip) or clone it with Git.
+1. [Download this repo as a ZIP](https://github.com/videre-project/mtgo-docker/archive/refs/heads/main.zip) or clone it with Git.
 2. Run from the project root:
    ```bash
    # Linux (Wayland)
@@ -101,7 +101,9 @@ The commands above work for quick sessions but **do not persist data** between r
 | `videreproject/mtgo` | MTGO runtime (Wine + .NET 4.8 + fonts) |
 | `videreproject/mtgosdk` | Development environment (adds .NET SDK + auto-clones [MTGOSDK](https://github.com/videre-project/MTGOSDK)) |
 
-Replace `videreproject/mtgo` with `videreproject/mtgosdk` in any command above to use the SDK variant.
+Both images publish `:headless`, `:x11`, and `:wayland` variants. The `:latest`
+tag points at the headless variant. Replace `videreproject/mtgo` with
+`videreproject/mtgosdk` in any command above to use the SDK variant.
 
 ## Configuration
 
@@ -110,6 +112,8 @@ Replace `videreproject/mtgo` with `videreproject/mtgosdk` in any command above t
 
 | Variable | Description | Default |
 |----------|-------------|---------|
+| `MTGO_HEADLESS` | Overrides variant-based headless detection | `true` for `:headless`, `false` for interactive variants |
+| `MTGO_ALSA_NULL` | Routes ALSA to the bundled null sink | `true` for `:headless`, `false` for interactive variants |
 | `START_VNC` | Starts the x11vnc server (Headless only) | `false` |
 | `WINE_VIRTUAL_DESKTOP` | Enables Wine's "Emulate Virtual Desktop" for window stability (Headless only) | `true` |
 | `RESOLUTION` | Sets the Xvfb and Virtual Desktop resolution (Headless only) | `1280x1024x24` |
@@ -135,7 +139,7 @@ Replace `videreproject/mtgo` with `videreproject/mtgosdk` in any command above t
 
 To modify and rebuild the images yourself:
 ```bash
-git clone https://github.com/videre-project/mtgo-oci.git && cd mtgo-oci
+git clone https://github.com/videre-project/mtgo-docker.git && cd mtgo-docker
 docker compose -f mtgo/docker-compose.yml build
 docker compose -f mtgosdk/docker-compose.yml build
 ```

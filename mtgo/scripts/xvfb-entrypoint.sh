@@ -2,15 +2,86 @@
 set -e
 
 # Disable Wine logging and set .NET runtime path
-export WINEDEBUG=-all
-export DOTNET_ROOT=C:\\dotnet
+export PATH="/opt/wine/bin:${PATH}"
+export WINEDEBUG="${WINEDEBUG:--all}"
+export DOTNET_ROOT="${DOTNET_ROOT:-C:\\dotnet}"
 
 # Configuration
 X_DISPLAY=${DISPLAY:-:99}
 RESOLUTION=${RESOLUTION:-1280x1024x24}
+MTGO_VARIANT=${MTGO_VARIANT:-}
+
+is_truthy() {
+    case "${1,,}" in
+        1|true|yes|on) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+is_falsey() {
+    case "${1,,}" in
+        0|false|no|off) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+is_headless_mode() {
+    if [ -n "${MTGO_HEADLESS:-}" ]; then
+        is_truthy "$MTGO_HEADLESS" && return 0
+        is_falsey "$MTGO_HEADLESS" && return 1
+    fi
+
+    if [ "$MTGO_VARIANT" = "headless" ]; then
+        return 0
+    fi
+
+    # Backward compatibility for older images and compose files that only set
+    # DISPLAY=:99 to request the virtual display.
+    if [ -z "$MTGO_VARIANT" ] && [ "$X_DISPLAY" = ":99" ]; then
+        return 0
+    fi
+
+    return 1
+}
+
+configure_headless_audio() {
+    export WINE_AUDIO_DRIVER="${WINE_AUDIO_DRIVER:-pulse}"
+
+    # MTGO's WPF audio manager queries Windows Core Audio's ISimpleAudioVolume.
+    # The headless ALSA driver can expose a partial COM surface under Wine, which
+    # crashes MTGO during startup. The pulse driver avoids that broken path even
+    # when there is no real audio device attached.
+    if command -v wine >/dev/null 2>&1; then
+        wine reg add "HKEY_CURRENT_USER\\Software\\Wine\\Drivers" \
+            /v "Audio" /t REG_SZ /d "$WINE_AUDIO_DRIVER" /f >/dev/null 2>&1 || true
+        wineserver -k >/dev/null 2>&1 || true
+    fi
+}
+
+use_null_alsa() {
+    if [ -n "${MTGO_ALSA_NULL:-}" ]; then
+        is_truthy "$MTGO_ALSA_NULL" && return 0
+        is_falsey "$MTGO_ALSA_NULL" && return 1
+    fi
+
+    # The headless variant defaults to null ALSA. Interactive variants leave host
+    # audio alone unless explicitly opted in with MTGO_ALSA_NULL=true.
+    [ "$HEADLESS_MODE" = "true" ]
+}
+
+HEADLESS_MODE=false
+if is_headless_mode; then
+    HEADLESS_MODE=true
+    configure_headless_audio
+fi
+
+if use_null_alsa; then
+    export ALSA_CONFIG_PATH="${ALSA_CONFIG_PATH:-/usr/local/share/mtgo/asound-null.conf}"
+    export ALSA_LOG_LEVEL="${ALSA_LOG_LEVEL:-0}"
+fi
 
 # Only start Xvfb if we are on display :99 (default headless)
-if [ "$X_DISPLAY" = ":99" ]; then
+if [ "$HEADLESS_MODE" = "true" ] && [ "$X_DISPLAY" = ":99" ]; then
     # cleanup stale lock files
     rm -f /tmp/.X${X_DISPLAY#:}*
 
