@@ -1,6 +1,7 @@
 services:
   mtgo-x11:
     container_name: mtgo-x11
+    platform: linux/amd64
     extends:
       file: ../common.yml
       service: x11-base
@@ -16,6 +17,7 @@ services:
 
   mtgo-wayland:
     container_name: mtgo-wayland
+    platform: linux/amd64
     extends:
       file: ../common.yml
       service: wayland-base
@@ -31,6 +33,7 @@ services:
 
   mtgo-headless:
     container_name: mtgo-headless
+    platform: linux/amd64
     extends:
       file: ../common.yml
       service: headless-base

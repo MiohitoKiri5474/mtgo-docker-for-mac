@@ -1,4 +1,4 @@
-FROM panard/wine:11.2-wow64
+FROM --platform=linux/amd64 panard/wine:11.2-wow64
 
 ARG MTGO_VARIANT=headless
 

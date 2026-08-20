@@ -25,6 +25,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./mtgo
+          platforms: linux/amd64
           build-args: |
             MTGO_VARIANT=headless
           push: true
@@ -36,6 +37,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./mtgo
+          platforms: linux/amd64
           build-args: |
             MTGO_VARIANT=x11
           push: true
@@ -46,6 +48,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./mtgo
+          platforms: linux/amd64
           build-args: |
             MTGO_VARIANT=wayland
           push: true
@@ -56,6 +59,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./mtgosdk
+          platforms: linux/amd64
           build-args: |
             BASE_IMAGE=videreproject/mtgo:headless
           push: true
@@ -67,6 +71,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./mtgosdk
+          platforms: linux/amd64
           build-args: |
             BASE_IMAGE=videreproject/mtgo:x11
           push: true
@@ -77,6 +82,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./mtgosdk
+          platforms: linux/amd64
           build-args: |
             BASE_IMAGE=videreproject/mtgo:wayland
           push: true

@@ -3,6 +3,7 @@ version: '3.8'
 services:
   # Base template for X11 display protocol
   x11-base:
+    platform: linux/amd64
     environment:
       - DISPLAY=${DISPLAY}
       - WINEDEBUG=-all
@@ -12,6 +13,7 @@ services:
 
   # Base template for Wayland display protocol
   wayland-base:
+    platform: linux/amd64
     environment:
       - DISPLAY=${DISPLAY} # XWayland fallback
       - WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-0}
@@ -24,6 +26,7 @@ services:
 
   # Base template for Headless operation using Xvfb
   headless-base:
+    platform: linux/amd64
     environment:
       - DISPLAY=:99
       - RESOLUTION=1280x1024x24

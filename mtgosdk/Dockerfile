@@ -1,5 +1,5 @@
 ARG BASE_IMAGE=mtgo-runtime
-FROM ${BASE_IMAGE}
+FROM --platform=linux/amd64 ${BASE_IMAGE}
 
 USER root
 
