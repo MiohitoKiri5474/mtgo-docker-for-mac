@@ -12,12 +12,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     gnupg \
     xvfb \
+    xauth \
     x11vnc \
     procps \
     net-tools \
     x11-utils \
     unzip \
     p7zip-full \
+    cabextract \
     && rm -rf /var/lib/apt/lists/*
 
 # Fix X11 socket permissions for non-root users
