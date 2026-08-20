@@ -105,10 +105,14 @@ if [ "$HEADLESS_MODE" = "true" ] && [ "$X_DISPLAY" = ":99" ]; then
     # Start VNC if requested
     if [ "$START_VNC" = "true" ]; then
         echo "Starting x11vnc..."
+        VNC_AUTH_OPTS="-nopw"
+        if [ -n "$VNC_PASSWORD" ]; then
+            VNC_AUTH_OPTS="-passwd $VNC_PASSWORD"
+        fi
         if [ "$DEBUG" = "true" ]; then
-            x11vnc -display $X_DISPLAY -forever -shared -nopw -bg -xkb -rfbport 5900 > /tmp/x11vnc.log 2>&1
+            x11vnc -display $X_DISPLAY -forever -shared $VNC_AUTH_OPTS -bg -xkb -rfbport 5900 > /tmp/x11vnc.log 2>&1
         else
-            x11vnc -display $X_DISPLAY -forever -shared -nopw -bg -xkb -rfbport 5900
+            x11vnc -display $X_DISPLAY -forever -shared $VNC_AUTH_OPTS -bg -xkb -rfbport 5900
         fi
     fi
 
