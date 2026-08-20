@@ -50,7 +50,7 @@ USER wine
 
 # Initialize Wine and install dependencies
 # We need dotnet48 for MTGO, and corefonts/gdiplus for UI/rendering
-RUN xvfb-run -a wineboot --init \
+RUN WINEDLLOVERRIDES="mscoree,mshtml=" xvfb-run -a wineboot --init \
     && wineserver -w \
     && mkdir -p /home/wine/.wine/drive_c/windows/syswow64 /home/wine/.wine/drive_c/windows/system32 \
     && cp -f /home/wine/.wine/drive_c/windows/regedit.exe /home/wine/.wine/drive_c/windows/syswow64/regedit.exe \
