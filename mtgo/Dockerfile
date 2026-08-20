@@ -49,13 +49,13 @@ RUN chmod +x /usr/local/bin/*.sh \
 USER wine
 
 # Initialize Wine and install dependencies
-# We need dotnet48 for MTGO, and corefonts/gdiplus for UI/rendering
+# We need corefonts/gdiplus and Windows 7 mode for MTGO UI and rendering
 RUN WINEDLLOVERRIDES="mscoree,mshtml=" xvfb-run -a wineboot --init \
     && wineserver -w \
     && mkdir -p /home/wine/.wine/drive_c/windows/syswow64 /home/wine/.wine/drive_c/windows/system32 \
     && cp -f /home/wine/.wine/drive_c/windows/regedit.exe /home/wine/.wine/drive_c/windows/syswow64/regedit.exe \
     && cp -f /home/wine/.wine/drive_c/windows/regedit.exe /home/wine/.wine/drive_c/windows/system32/regedit.exe \
-    && xvfb-run -a winetricks -q dotnet48 corefonts calibri tahoma consolas lucida win7 gdiplus renderer=gdi \
+    && xvfb-run -a winetricks -q corefonts calibri tahoma consolas lucida win7 gdiplus renderer=gdi \
     && wineserver -w \
     && rm -rf /home/wine/.cache/winetricks
 
