@@ -59,7 +59,13 @@ fi
 
 echo ""
 echo "=== Network Status ==="
-ip addr show | grep 'inet '
+if command -v ip >/dev/null 2>&1; then
+    ip addr show | grep 'inet ' || true
+elif command -v ifconfig >/dev/null 2>&1; then
+    ifconfig | grep 'inet ' || true
+elif command -v hostname >/dev/null 2>&1; then
+    hostname -I 2>/dev/null || true
+fi
 # Check if we can reach Daybreak's patch server
 if curl -sI http://mtgo.patch.daybreakgames.com/patch/mtg/live/client/MTGO.application > /dev/null; then
     echo "[PASS] Daybreak patch server is reachable."

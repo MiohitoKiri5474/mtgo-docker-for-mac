@@ -125,17 +125,9 @@ if [ "$HEADLESS_MODE" = "true" ] && [ "$X_DISPLAY" = ":99" ]; then
 
     # Trap signals for cleanup
     trap "kill $XVFB_PID" SIGINT SIGTERM
-
-    # # Auto-install MTGO if missing (default: true)
-    # AUTO_INSTALL_MTGO=${AUTO_INSTALL_MTGO:-true}
-    # if [ "$AUTO_INSTALL_MTGO" = "true" ]; then
-    #     MTGO_EXE=$(find "$WINEPREFIX/drive_c/users/wine/AppData/Local/Apps/2.0" -name "MTGO.exe" | head -n 1)
-    #     if [ -z "$MTGO_EXE" ]; then
-    #         echo "MTGO not found. Starting automatic installation..."
-    #         install-mtgo.sh
-    #     fi
-    # fi
 fi
+
+export DISPLAY="$X_DISPLAY"
 
 # Execute the passed command
 exec "$@"
