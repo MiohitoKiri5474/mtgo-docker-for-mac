@@ -4,6 +4,18 @@ Run [Magic: The Gathering Online](https://www.mtgo.com) on **Linux** and **macOS
 
 Pre-built images running MTGO in Docker using [Wine](https://www.winehq.org) are available on Docker Hub, with additional containers for building and running [MTGOSDK](https://github.com/videre-project/MTGOSDK)-based applications.
 
+## Apple Silicon (M-Series Mac) Setup
+
+To run MTGO on Apple Silicon (M1/M2/M3/M4) Macs:
+
+1. Open **Docker Desktop Settings** > **General** (or **Virtualization**).
+2. Ensure **"Use Virtualization framework"** and **"Use Rosetta for x86/amd64 emulation on Apple Silicon"** are **enabled**.
+3. Under **Settings** > **Resources**, allocate at least **4 CPUs** and **6–8 GB RAM** for Wine and .NET stability.
+
+All Dockerfiles and Compose configurations in this repo are pre-configured to target `linux/amd64` under Rosetta emulation.
+
+---
+
 ## Quick Start
 
 Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) (macOS) or [Docker Engine](https://docs.docker.com/engine/install/) (Linux).
@@ -14,38 +26,11 @@ Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) (macOS
 Then run the command for your platform:
 
 <details open>
-<summary><b>Linux (Wayland)</b></summary>
-
-For modern desktops (GNOME 45+, KDE Plasma 6):
-```bash
-docker run -it --name mtgo \
-  -e DISPLAY=$DISPLAY \
-  -e WAYLAND_DISPLAY=$WAYLAND_DISPLAY \
-  -e XDG_RUNTIME_DIR=/tmp/runtime-dir \
-  -v ${XDG_RUNTIME_DIR}/wayland-0:/tmp/runtime-dir/wayland-0 \
-  videreproject/mtgo:wayland
-```
-</details>
-
-<details>
-<summary><b>Linux (X11)</b></summary>
-
-For X11-based desktops or NVIDIA GPU users:
-```bash
-xhost +local:docker
-docker run -it --name mtgo \
-  -e DISPLAY=$DISPLAY \
-  -v /tmp/.X11-unix:/tmp/.X11-unix \
-  videreproject/mtgo:x11
-```
-</details>
-
-<details>
-<summary><b>macOS (Headless + VNC) — Recommended</b></summary>
+<summary><b>macOS (Headless + VNC) — Recommended for Mac</b></summary>
 
 Runs a virtual desktop inside the container. All windows stay together.
 ```bash
-docker run -it --name mtgo \
+docker run -it --platform linux/amd64 --name mtgo \
   -e DISPLAY=:99 \
   -e START_VNC=true \
   -p 5900:5900 \
@@ -70,28 +55,58 @@ Lower latency by forwarding windows directly to your desktop.
 3. Restart XQuartz, then run `xhost +localhost`.
 4. Run:
    ```bash
-   docker run -it --name mtgo-x11 \
+   docker run -it --platform linux/amd64 --name mtgo-x11 \
      -e DISPLAY=host.docker.internal:0 \
      -v /tmp/.X11-unix:/tmp/.X11-unix \
      videreproject/mtgo:x11
    ```
 </details>
 
+<details>
+<summary><b>Linux (Wayland)</b></summary>
+
+For modern desktops (GNOME 45+, KDE Plasma 6):
+```bash
+docker run -it --platform linux/amd64 --name mtgo \
+  -e DISPLAY=$DISPLAY \
+  -e WAYLAND_DISPLAY=$WAYLAND_DISPLAY \
+  -e XDG_RUNTIME_DIR=/tmp/runtime-dir \
+  -v ${XDG_RUNTIME_DIR}/wayland-0:/tmp/runtime-dir/wayland-0 \
+  videreproject/mtgo:wayland
+```
+</details>
+
+<details>
+<summary><b>Linux (X11)</b></summary>
+
+For X11-based desktops or NVIDIA GPU users:
+```bash
+xhost +local:docker
+docker run -it --platform linux/amd64 --name mtgo \
+  -e DISPLAY=$DISPLAY \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  videreproject/mtgo:x11
+```
+</details>
+
 ## Persistent Setup (Docker Compose)
 
 The commands above work for quick sessions but **do not persist data** between runs. For regular use, use the Compose files in this repository to automatically manage volumes for your Wine settings, decklists, and login data.
 
-1. [Download this repo as a ZIP](https://github.com/videre-project/mtgo-docker/archive/refs/heads/main.zip) or clone it with Git.
+1. Clone this repository or use your fork.
 2. Run from the project root:
    ```bash
+   # macOS / headless (Recommended)
+   docker compose -f mtgo/docker-compose.yml up -d mtgo-headless
+
+   # Development with MTGOSDK (Headless)
+   docker compose -f mtgosdk/docker-compose.yml up -d mtgosdk-headless
+
    # Linux (Wayland)
    docker compose -f mtgosdk/docker-compose.yml up -d mtgosdk-wayland
 
    # Linux (X11)
    docker compose -f mtgosdk/docker-compose.yml up -d mtgosdk-x11
-
-   # macOS / headless
-   docker compose -f mtgosdk/docker-compose.yml up -d mtgosdk-headless
    ```
 
 ## Available Images
@@ -126,7 +141,7 @@ tag points at the headless variant. Replace `videreproject/mtgo` with
 |--------|---------|
 | Install MTGO | `install-mtgo.sh` |
 | Run MTGO | `mtgo` |
-| Pull latest image | `docker pull videreproject/mtgo:latest` |
+| Pull latest image | `docker pull --platform linux/amd64 videreproject/mtgo:latest` |
 | Open a shell | `docker exec -it mtgo /bin/bash` |
 | Stop | `docker stop mtgo` |
 | Remove | `docker rm mtgo` |
@@ -137,9 +152,8 @@ tag points at the headless variant. Replace `videreproject/mtgo` with
 <details>
 <summary><b>Building Locally</b></summary>
 
-To modify and rebuild the images yourself:
+To modify and rebuild the images yourself (with native Apple Silicon Rosetta support):
 ```bash
-git clone https://github.com/videre-project/mtgo-docker.git && cd mtgo-docker
 docker compose -f mtgo/docker-compose.yml build
 docker compose -f mtgosdk/docker-compose.yml build
 ```
