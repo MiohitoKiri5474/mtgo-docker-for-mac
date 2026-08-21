@@ -1,16 +1,36 @@
-FROM --platform=linux/amd64 panard/wine:11.2-wow64
+FROM --platform=linux/amd64 debian:bookworm-slim
 
 ARG MTGO_VARIANT=headless
+# Pinned below the point where upstream Wine made the new WoW64 architecture
+# mandatory (~10.8). That architecture crashes Rosetta 2 (Docker Desktop's
+# amd64 emulation on Apple Silicon) when spawning any 32-bit process, which
+# breaks MTGO's 32-bit ClickOnce bootstrapper entirely. Classic Wine, with a
+# real i386 build alongside the amd64 one, does not hit this bug.
+ARG WINE_VERSION=9.0.0.0~bookworm-1
 
 USER root
 
+# Classic (non-WoW64) Wine via WineHQ's apt repo: a real 32-bit build plus a
+# real 64-bit build, not Wine's newer single-process 32/64 emulation.
+RUN dpkg --add-architecture i386 \
+    && apt-get update && apt-get install -y --no-install-recommends \
+       wget ca-certificates gnupg \
+    && mkdir -pm755 /etc/apt/keyrings \
+    && wget -qO /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key \
+    && wget -qNP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/debian/dists/bookworm/winehq-bookworm.sources \
+    && apt-get update \
+    && apt-get install -y --install-recommends \
+       winehq-stable=${WINE_VERSION} \
+       wine-stable=${WINE_VERSION} \
+       wine-stable-amd64=${WINE_VERSION} \
+       wine-stable-i386:i386=${WINE_VERSION} \
+    && apt-mark hold winehq-stable wine-stable wine-stable-amd64 wine-stable-i386:i386 \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install basic dependencies and headless tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget \
-    ca-certificates \
     curl \
     git \
-    gnupg \
     xvfb \
     xauth \
     x11vnc \
@@ -22,6 +42,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cabextract \
     && rm -rf /var/lib/apt/lists/*
 
+# winetricks isn't packaged for Debian bookworm; install the upstream script directly.
+RUN wget -qO /usr/local/bin/winetricks https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
+    && chmod +x /usr/local/bin/winetricks
+
 # Fix X11 socket permissions for non-root users
 RUN mkdir -p /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix
 
@@ -30,8 +54,7 @@ ENV WINE_USER wine
 ENV WINE_UID 1000
 RUN useradd -u $WINE_UID -d /home/wine -m -s /bin/bash $WINE_USER
 
-# Switch back to wine user for wine operations
-ENV PATH="/opt/wine/bin:${PATH}"
+# wine/wineboot/winecfg etc. are already on the default PATH via /usr/bin.
 ENV WINEPREFIX=/home/wine/.wine
 ENV WINEARCH=win64
 ENV WINEDEBUG=-all
@@ -48,13 +71,13 @@ RUN chmod +x /usr/local/bin/*.sh \
     && ln -s /usr/local/bin/mtgo.sh /usr/local/bin/mtgo
 USER wine
 
-# Initialize Wine and install dependencies
-# We need corefonts/gdiplus and Windows 7 mode for MTGO UI and rendering
+# Initialize Wine and install dependencies.
+# We need corefonts/gdiplus and Windows 7 mode for MTGO UI and rendering.
+# ShowCrashDialog=0 stops a non-interactive winedbg hang if any installer
+# step throws (observed with the .NET installer family under Wine).
 RUN WINEDLLOVERRIDES="mscoree,mshtml=" xvfb-run -a wineboot --init \
     && wineserver -w \
-    && mkdir -p /home/wine/.wine/drive_c/windows/syswow64 /home/wine/.wine/drive_c/windows/system32 \
-    && cp -f /home/wine/.wine/drive_c/windows/regedit.exe /home/wine/.wine/drive_c/windows/syswow64/regedit.exe \
-    && cp -f /home/wine/.wine/drive_c/windows/regedit.exe /home/wine/.wine/drive_c/windows/system32/regedit.exe \
+    && wine reg add "HKEY_CURRENT_USER\\Software\\Wine\\WineDbg" /v ShowCrashDialog /t REG_DWORD /d 0 /f \
     && xvfb-run -a winetricks -q corefonts calibri tahoma consolas lucida win7 gdiplus renderer=gdi \
     && wineserver -w \
     && rm -rf /home/wine/.cache/winetricks

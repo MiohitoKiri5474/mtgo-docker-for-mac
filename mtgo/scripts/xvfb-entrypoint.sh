@@ -2,7 +2,6 @@
 set -e
 
 # Disable Wine logging and set .NET runtime path
-export PATH="/opt/wine/bin:${PATH}"
 export WINEDEBUG="${WINEDEBUG:--all}"
 export DOTNET_ROOT="${DOTNET_ROOT:-C:\\dotnet}"
 
