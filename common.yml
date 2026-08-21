@@ -31,5 +31,6 @@ services:
       - DISPLAY=:99
       - RESOLUTION=1280x1024x24
       - START_VNC=${START_VNC:-false}
+      - VNC_PASSWORD=${VNC_PASSWORD:-}
       - WINEDEBUG=-all
     tty: true
