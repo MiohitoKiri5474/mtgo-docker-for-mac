@@ -33,10 +33,14 @@ Runs a virtual desktop inside the container. All windows stay together.
 docker run -it --platform linux/amd64 --name mtgo \
   -e DISPLAY=:99 \
   -e START_VNC=true \
-  -p 5900:5900 \
+  -e VNC_PASSWORD=yourpassword \
+  -p 5901:5900 \
   videreproject/mtgo:headless
 ```
-Then open **Screen Sharing** (⌘+Space → "Screen Sharing") and connect to `vnc://localhost:5900`.
+Then open **Screen Sharing** (⌘+Space → "Screen Sharing") and connect to `vnc://localhost:5901`.
+
+> [!NOTE]
+> Host port 5900 conflicts with macOS's built-in Screen Sharing/AirPlay Receiver service. Use 5901 (or any free port) instead.
 
 > [!TIP]
 > MTGO's UI is not responsive in headless mode. The resolution is fixed at startup. Use "Scale to Fit" in Screen Sharing to adjust the view, or set a different `RESOLUTION` (see [Configuration](#configuration)).
@@ -130,6 +134,7 @@ tag points at the headless variant. Replace `videreproject/mtgo` with
 | `MTGO_HEADLESS` | Overrides variant-based headless detection | `true` for `:headless`, `false` for interactive variants |
 | `MTGO_ALSA_NULL` | Routes ALSA to the bundled null sink | `true` for `:headless`, `false` for interactive variants |
 | `START_VNC` | Starts the x11vnc server (Headless only) | `false` |
+| `VNC_PASSWORD` | Sets the x11vnc connection password (Headless only) | unset (no auth) |
 | `WINE_VIRTUAL_DESKTOP` | Enables Wine's "Emulate Virtual Desktop" for window stability (Headless only) | `true` |
 | `RESOLUTION` | Sets the Xvfb and Virtual Desktop resolution (Headless only) | `1280x1024x24` |
 | `AUTO_INSTALL_MTGO` | Automatically runs `install-mtgo.sh` if MTGO is missing | `true` |
