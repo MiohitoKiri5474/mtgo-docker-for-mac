@@ -82,6 +82,13 @@ RUN WINEDLLOVERRIDES="mscoree,mshtml=" xvfb-run -a wineboot --init \
     && wineserver -w \
     && rm -rf /home/wine/.cache/winetricks
 
+# Bake the MTGO bootstrapper download into the image so first-run doesn't pay
+# for it. This is as far as "install at build time" goes: WINEPREFIX
+# (/home/wine/.wine) is a runtime volume mount, and the ClickOnce bootstrapper
+# re-validates against the patch server on every launch anyway, so running the
+# installer here wouldn't survive or save anything.
+RUN wget -O /home/wine/mtgo_setup.exe https://mtgo.patch.daybreakgames.com/patch/mtg/live/client/setup.exe
+
 # Set up workspace directory
 USER root
 RUN mkdir -p /workspace && chown wine:wine /workspace

@@ -21,7 +21,7 @@ All Dockerfiles and Compose configurations in this repo are pre-configured to ta
 Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) (macOS) or [Docker Engine](https://docs.docker.com/engine/install/) (Linux).
 
 > [!TIP]
-> **Automatic Installation**: MTGO will automatically download and install on the first run of a new container. You can disable this by setting `AUTO_INSTALL_MTGO=false`. once setup, launch the game with `mtgo`.
+> **Automatic Install & Launch**: The image bundles the MTGO installer. Running the container with the `mtgo` command installs it on first run (via the same ClickOnce bootstrapper that launches it on every subsequent run) — pull the image, run it, and play. Pass a different command (e.g. `bash`) to get a shell instead.
 
 Then run the command for your platform:
 
@@ -35,9 +35,9 @@ docker run -it --platform linux/amd64 --name mtgo \
   -e START_VNC=true \
   -e VNC_PASSWORD=yourpassword \
   -p 5901:5900 \
-  videreproject/mtgo:headless
+  videreproject/mtgo:headless mtgo
 ```
-Then open **Screen Sharing** (⌘+Space → "Screen Sharing") and connect to `vnc://localhost:5901`.
+Then open **Screen Sharing** (⌘+Space → "Screen Sharing") and connect to `vnc://localhost:5901`. MTGO installs itself on first connect — watch the VNC session in case the ClickOnce bootstrapper needs a click through a trust prompt.
 
 > [!NOTE]
 > Host port 5900 conflicts with macOS's built-in Screen Sharing/AirPlay Receiver service. Use 5901 (or any free port) instead.
@@ -100,7 +100,7 @@ The commands above work for quick sessions but **do not persist data** between r
 1. Clone this repository or use your fork.
 2. Run from the project root:
    ```bash
-   # macOS / headless (Recommended)
+   # macOS / headless (Recommended) — installs and launches MTGO automatically
    docker compose -f mtgo/docker-compose.yml up -d mtgo-headless
 
    # Development with MTGOSDK (Headless)
@@ -137,7 +137,6 @@ tag points at the headless variant. Replace `videreproject/mtgo` with
 | `VNC_PASSWORD` | Sets the x11vnc connection password (Headless only) | unset (no auth) |
 | `WINE_VIRTUAL_DESKTOP` | Enables Wine's "Emulate Virtual Desktop" for window stability (Headless only) | `true` |
 | `RESOLUTION` | Sets the Xvfb and Virtual Desktop resolution (Headless only) | `1280x1024x24` |
-| `AUTO_INSTALL_MTGO` | Automatically runs `install-mtgo.sh` if MTGO is missing | `true` |
 | `MTGOSDK_PATH` | Path to your local [MTGOSDK](https://github.com/videre-project/MTGOSDK) repository | `../../MTGOSDK` |
 
 ## Reference
