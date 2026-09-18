@@ -76,14 +76,25 @@ USER wine
 # ShowCrashDialog=0 stops a non-interactive winedbg hang if any installer
 # step throws (observed with the .NET installer family under Wine).
 #
-# .NET 4.7.2 (winetricks dotnet472) is deliberately NOT installed here: its
-# dependency chain (dotnet40 -> 45 -> 46 -> 461 -> 462 -> 472) hits a Rosetta 2
-# bug in the dotnet40 stage's 32-bit bootstrap ("rosetta error: invalid gdt
-# selector index 5" -> unhandled illegal instruction), which then hangs
-# forever because winedbg attaches on the crash and waits on stdin. This is a
-# Rosetta emulation gap (32-bit segment-selector handling), not something
-# fixable from the Dockerfile. Install .NET manually over VNC if MTGO prompts
-# for it, or via install-mtgo.sh.
+# .NET 4.7.2 is deliberately NOT installed here. Two different install paths
+# were tried and both fail to complete unattended under Wine 9.0 (classic):
+#   1. winetricks dotnet472's dependency chain (dotnet40 -> 45 -> 46 -> 461 ->
+#      462 -> 472) crashes in the dotnet40 stage's 32-bit bootstrap with
+#      "rosetta error: invalid gdt selector index 5" -> unhandled illegal
+#      instruction, then hangs forever because winedbg attaches on the crash
+#      and waits on stdin. This one IS Rosetta-specific (32-bit x86 segment-
+#      selector emulation gap) and wouldn't reproduce on real amd64 hardware.
+#   2. MTGO's own bootstrapper prompts for .NET 4.7.2 itself and runs a
+#      different installer (NDP472-KB4054531-Web.exe -> Setup.exe /x86 /x64
+#      /web). This one deadlocks silently instead: zero CPU and zero network
+#      I/O for 90+ seconds, no crash text at all. That has no Rosetta
+#      fingerprint -- it looks like Wine 9.0 classic's split 32-bit/64-bit
+#      process model failing to complete the installer's x86/x64 chaining
+#      handoff, and would likely deadlock the same way on real amd64 too.
+# Net effect: don't assume a CI build on real x86_64 hardware fixes this --
+# only failure mode 1 is confirmed Rosetta-only. Install .NET manually over
+# VNC if MTGO prompts for it (same deadlock risk applies), or via
+# install-mtgo.sh.
 RUN WINEDLLOVERRIDES="mscoree,mshtml=" xvfb-run -a wineboot --init \
     && wineserver -w \
     && wine reg add "HKEY_CURRENT_USER\\Software\\Wine\\WineDbg" /v ShowCrashDialog /t REG_DWORD /d 0 /f \
