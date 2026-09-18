@@ -75,6 +75,15 @@ USER wine
 # We need corefonts/gdiplus and Windows 7 mode for MTGO UI and rendering.
 # ShowCrashDialog=0 stops a non-interactive winedbg hang if any installer
 # step throws (observed with the .NET installer family under Wine).
+#
+# .NET 4.7.2 (winetricks dotnet472) is deliberately NOT installed here: its
+# dependency chain (dotnet40 -> 45 -> 46 -> 461 -> 462 -> 472) hits a Rosetta 2
+# bug in the dotnet40 stage's 32-bit bootstrap ("rosetta error: invalid gdt
+# selector index 5" -> unhandled illegal instruction), which then hangs
+# forever because winedbg attaches on the crash and waits on stdin. This is a
+# Rosetta emulation gap (32-bit segment-selector handling), not something
+# fixable from the Dockerfile. Install .NET manually over VNC if MTGO prompts
+# for it, or via install-mtgo.sh.
 RUN WINEDLLOVERRIDES="mscoree,mshtml=" xvfb-run -a wineboot --init \
     && wineserver -w \
     && wine reg add "HKEY_CURRENT_USER\\Software\\Wine\\WineDbg" /v ShowCrashDialog /t REG_DWORD /d 0 /f \
